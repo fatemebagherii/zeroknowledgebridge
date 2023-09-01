@@ -1,0 +1,10 @@
+import "hashes/sha256/512bitPacked" as sha256packed;
+
+
+def main(private field k0, private field k1, field v0, field v1, field t0, field t1,
+            field a0, field a1) -> field[2] {
+    field vtA0 = v0 + t0 + a0;
+    field vtA1 = v1 + t1 + a1;
+    field[2] chi = sha256packed([k0, k1, vtA0, vtA1]);
+    return chi;
+}
