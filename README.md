@@ -51,3 +51,31 @@ which gives us the result in the form of a 32-byte-long hash value:
 Now, we can call the `deposit` function. So, we go back to Remix and call the `deposit` function with inputs `v`, `t`, and $\chi$. 
 
 By doing this, a new $\tau$ value will be added to the `taus` array and an event is thrown containing this new $\tau$. Now, it is time for the relayer to catch this event and relay this new value to the destination chain. In this case, you are the relayer. From the log events on the first chain, find the new $\tau$ value. Then, go to the second chain and using `addTauPrime` function, transfer this value to the second chain. Now, the bridge on the second chain is ready to redeem the transferred funds. To this end, we need to call the `withdraw` function. Inputs to this function include the `A`, `B`, and `C` values that constitute the proof in a `Groth16` zero-knowledge protocol plus public values including `v`, `t`, `A`, $\tau[n]$, and $\tau[n-1]$ where `n` is the index in the $\tau$ array from which we are redeeming. 
+
+To generate the proof, we use the `proof_generation/getProof.zok` file. The inputs required to generate a proof include `k`, `v`, `t`, `A`, $\tau[n]$, and $\tau[n-1]$. First, we need to make sure we have these values in the correct format supported by Zokrates which is chunks of 128-bit-long integers. We get $\tau[n]$ and $\tau[n-1]$ values from the destination bridge smart contract. In this case, since we have only locked once, `n` is equal to `1`. So, we call `getTauPrime` with input `0` and `1` and get the following values:
+```
+0xc6481e22c5ff4164af680b8cfaa5e8ed3120eeff89c4f307c4a6faaae059ce10
+```
+and 
+```
+0x0c21360b1b5cecf60b9660e7b65026f972be093383692e94a04b7ced4571d638
+```
+Then, using `chi_generation/break_hash_to_128_bits.py`, we break them into 128-bit-long integers:
+```
+python3 break_hash_to_128_bits.py 0xc6481e22c5ff4164af680b8cfaa5e8ed3120eeff89c4f307c4a6faaae059ce10
+263561599766550617289250058199814760685 65303172752238645975888084098459749904
+```
+and 
+```
+python3 break_hash_to_128_bits.py 0x0c21360b1b5cecf60b9660e7b65026f972be093383692e94a04b7ced4571d638
+16123177875847460091502621220479706873 152518714545594441321152369977334027832
+```
+Now, using these values, we can generate the proof:
+```
+cd proof_generation
+zokrates compile -i getProof.zok
+zokrates setup
+zokrates compute-witness -a 62215354699795608743855020188736731200 217386241686911651285686821685923559305 0 3 0 1 1530452586 149020674686142704025204189025701649860 263561599766550617289250058199814760685 65303172752238645975888084098459749904 16123177875847460091502621220479706873 152518714545594441321152369977334027832 --verbose
+zokrates generate-proof
+```
+After these steps, a new file `proof.json` containing the proof is generated. The main fields in this JSON file include `a`, `b`, `c`, and `input`. We copy them into the respective inputs in the withdraw function along with the proper index of $\tau^{\prime}$ from which we want to withdraw. This function checks the correctness of the proof and if everything is correct and there is no fraud intended, the funds will be redeemed. 
