@@ -49,3 +49,5 @@ which gives us the result in the form of a 32-byte-long hash value:
 0x103e4c17e180933cc24e1bf4ec4fb8e7e66cf4680ccfe67f2db0a02ce3a05a44
 ```
 Now, we can call the `deposit` function. So, we go back to Remix and call the `deposit` function with inputs `v`, `t`, and $\chi$. 
+
+By doing this, a new $\tau$ value will be added to the `taus` array and an event is thrown containing this new $\tau$. Now, it is time for the relayer to catch this event and relay this new value to the destination chain. In this case, you are the relayer. From the log events on the first chain, find the new $\tau$ value. Then, go to the second chain and using `addTauPrime` function, transfer this value to the second chain. Now, the bridge on the second chain is ready to redeem the transferred funds. To this end, we need to call the `withdraw` function. Inputs to this function include the `A`, `B`, and `C` values that constitute the proof in a `Groth16` zero-knowledge protocol plus public values including `v`, `t`, `A`, $\tau[n]$, and $\tau[n-1]$ where `n` is the index in the $\tau$ array from which we are redeeming. 
