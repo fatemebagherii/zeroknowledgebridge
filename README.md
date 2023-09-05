@@ -1,4 +1,4 @@
-# zeroknowledgebridge
+# Zero Knowledge Bridge
 
 `Bridge.sol` includes the bridge smart contract called `BridgeContract`. In order to create a test bridge, this smart contract has to be deployed on two different blockchains, e.g. sepolia and goerli.
 Moreover, tokens have to be deployed on both chains. The smart contract `ERC20Token` in the same file can be used for this purpose. 
